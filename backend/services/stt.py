@@ -35,9 +35,17 @@ class STTService:
         self._client = None
         self._initialized = False
         self._debug_dir = "audio_debug"
+        # OFF by default: writing files into this backend directory while
+        # uvicorn --reload is watching it triggers a full server reload
+        # mid-conversation, which kills the websocket before a response can
+        # be sent. Set STT_SAVE_DEBUG_AUDIO=true only if you need to inspect
+        # raw audio, and run uvicorn without --reload (or exclude this dir)
+        # while doing so.
+        self._save_debug = os.getenv("STT_SAVE_DEBUG_AUDIO", "false").lower() == "true"
         
-        # Create debug directory
-        os.makedirs(self._debug_dir, exist_ok=True)
+        # Create debug directory only if debug saving is enabled
+        if self._save_debug:
+            os.makedirs(self._debug_dir, exist_ok=True)
         
         # Provider configurations
         self.providers = {
@@ -100,7 +108,9 @@ class STTService:
             return None
     
     def _save_debug_audio(self, audio_data: bytes, prefix: str = "audio") -> str:
-        """Save audio for debugging"""
+        """Save audio for debugging (no-op unless STT_SAVE_DEBUG_AUDIO=true)"""
+        if not self._save_debug:
+            return ""
         try:
             import time
             filename = f"{self._debug_dir}/{prefix}_{int(time.time())}.webm"

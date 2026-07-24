@@ -1,52 +1,58 @@
+# =========================
 # Python
+# =========================
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 .Python
-env/
-venv/
-ENV/
-dist/
-build/
-*.egg-info/
 .pytest_cache/
 .coverage
 htmlcov/
+*.egg-info/
 
-# Node
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables
+backend/.env
+frontend/.env
+.env
+.env.*
+
+# Audio / Debug Files
+backend/audio_debug/
+
+# Node.js
 node_modules/
 .next/
 out/
-dist/
-*.log
-.npm
-.yarn
-.pnp/
-.pnp.js
-
-# Environment
-.env
-.env.local
-.env.*.local
+.npm/
+.yarn/
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
+
+# OS Files
 .DS_Store
+Thumbs.db
 
-# Build
-*.tgz
-*.tar.gz
-*.zip
+# Logs
+*.log
 
-# Misc
+# Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Coverage
 coverage/
+
+# Deployment
 .vercel/
-render.yaml
+
+# Build
+dist/
+build/

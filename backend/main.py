@@ -60,11 +60,13 @@ async def lifespan(app: FastAPI):
             timeout_seconds=settings.session_timeout,
             max_sessions=settings.max_concurrent_sessions
         )
+        await session_manager.start()
         logger.info("✅ Session Manager initialized")
         
         websocket_manager = WebSocketManager(
             max_connections=settings.max_websocket_connections
         )
+        await websocket_manager.start()
         logger.info("✅ WebSocket Manager initialized")
         
         voice_pipeline = VoicePipeline(
@@ -129,12 +131,17 @@ app = FastAPI(
 )
 
 # Configure CORS
+# NOTE: `settings` global is only populated inside lifespan(), which runs
+# AFTER middleware is registered. So we load settings here directly
+# (get_settings() is cached, so this is cheap and safe to call early).
+_cors_settings = get_settings()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins if settings else ["*"],
+    allow_origins=_cors_settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=_cors_settings.allowed_methods,
+    allow_headers=_cors_settings.allowed_headers,
     expose_headers=["*"],
     max_age=3600,
 )
@@ -259,19 +266,37 @@ async def websocket_endpoint(websocket: WebSocket):
                 
             except asyncio.TimeoutError:
                 # Send heartbeat to keep connection alive
-                await websocket.send_json({
-                    "type": "heartbeat",
-                    "timestamp": asyncio.get_event_loop().time()
-                })
+                try:
+                    await websocket.send_json({
+                        "type": "heartbeat",
+                        "timestamp": asyncio.get_event_loop().time()
+                    })
+                except Exception:
+                    # Socket is already dead - stop looping instead of
+                    # retrying receive_text() forever on a closed connection.
+                    logger.info(f"🔌 Session {session_id[:8]} socket dead during heartbeat, closing loop")
+                    break
                 continue
-                
+
             except WebSocketDisconnect:
                 logger.info(f"🔌 Session {session_id[:8]} disconnected")
                 break
-                
+
+            except RuntimeError as e:
+                # Starlette raises RuntimeError (not WebSocketDisconnect) when
+                # the socket is already closed and receive_text()/send() is
+                # called again. Without this, the loop would call
+                # receive_text() forever on a dead socket and flood the logs.
+                logger.warning(f"🔌 Session {session_id[:8]} websocket already closed: {e}")
+                break
+
             except Exception as e:
                 logger.error(f"Error processing message: {e}", exc_info=True)
-                await send_error(websocket, "Internal server error")
+                try:
+                    await send_error(websocket, "Internal server error")
+                except Exception:
+                    logger.warning(f"🔌 Session {session_id[:8]} could not notify client, closing loop")
+                    break
                 
     except WebSocketDisconnect:
         logger.info(f"🔌 Session {session_id[:8]} disconnected unexpectedly")
@@ -283,7 +308,7 @@ async def websocket_endpoint(websocket: WebSocket):
         # Cleanup
         if session_id:
             await websocket_manager.unregister(session_id)
-            session_manager.end_session(session_id)
+            await session_manager.end_session(session_id)
             logger.info(f"🧹 Session {session_id[:8]} cleaned up")
 
 

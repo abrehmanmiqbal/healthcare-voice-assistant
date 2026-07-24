@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sehat — AI Care Companion</title>
+<meta name="description" content="Sehat is a real-time voice AI care companion. Speak naturally and get calm, guided support.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23146B6E'/%3E%3Cpath d='M4 17h5l2.5-7L15 24l3-14 2 7h8' stroke='%23FF6A55' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10262B;
+    --ink-soft:#2C4448;
+    --slate:#5B6E71;
+    --slate-soft:#8A9A9C;
+    --teal:#146B6E;
+    --teal-dark:#0E4F51;
+    --teal-tint:#E4F0EF;
+    --coral:#FF6A55;
+    --coral-dark:#E1523F;
+    --coral-tint:#FFE6E1;
+    --mist:#F4F8F7;
+    --paper:#FFFFFF;
+    --line:rgba(16,38,43,0.10);
+    --line-soft:rgba(16,38,43,0.06);
+    --success:#2E8B67;
+    --error:#D6455B;
+    --amber:#C98A1D;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --font-display:'Bricolage Grotesque', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --shadow-card:0 1px 2px rgba(16,38,43,0.04), 0 12px 32px -16px rgba(16,38,43,0.14);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 480px at 85% -10%, rgba(20,107,110,0.07), transparent 60%),
+      radial-gradient(900px 420px at -10% 10%, rgba(255,106,85,0.06), transparent 55%),
+      var(--mist);
+    min-height:100vh;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+
+  :focus-visible{
+    outline:2.5px solid var(--teal);
+    outline-offset:2px;
+    border-radius:6px;
+  }
+
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:22px 24px 48px;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:6px 4px 26px;
+    flex-wrap:wrap;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+  .brand-mark{
+    width:38px; height:38px;
+    border-radius:11px;
+    background:linear-gradient(155deg, var(--teal) 0%, var(--teal-dark) 100%);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    box-shadow:0 6px 16px -6px rgba(14,79,81,0.55);
+  }
+  .brand-mark svg{ width:20px; height:20px; }
+  .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+  .brand-name{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:-0.01em;
+  }
+  .brand-eyebrow{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    color:var(--slate);
+    text-transform:uppercase;
+    margin-top:1px;
+  }
+
+  .status-cluster{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .pill{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    box-shadow:var(--shadow-card);
+  }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--slate-soft);
+    flex-shrink:0;
+  }
+  .dot.on{ background:var(--success); box-shadow:0 0 0 3px rgba(46,139,103,0.18); }
+  .dot.warn{ background:var(--amber); box-shadow:0 0 0 3px rgba(201,138,29,0.18); }
+  .dot.off{ background:var(--error); box-shadow:0 0 0 3px rgba(214,69,91,0.18); }
+  .dot.pulse{ animation:dotpulse 1.6s ease-in-out infinite; }
+  @keyframes dotpulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.35); } }
+
+  .icon-btn{
+    width:34px; height:34px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color:var(--slate);
+    box-shadow:var(--shadow-card);
+    transition:border-color .15s ease, color .15s ease, transform .15s ease;
+  }
+  .icon-btn:hover{ color:var(--teal); border-color:var(--teal); transform:translateY(-1px); }
+  .icon-btn svg{ width:16px; height:16px; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+    padding:38px 32px 34px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin:0 0 10px;
+  }
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(26px, 4vw, 36px);
+    letter-spacing:-0.015em;
+    margin:0 0 8px;
+  }
+  .hero p.sub{
+    color:var(--slate);
+    font-size:15px;
+    max-width:460px;
+    margin:0 auto 26px;
+  }
+
+  .scope{
+    width:100%;
+    max-width:560px;
+    height:84px;
+    margin:0 auto 6px;
+    display:block;
+  }
+
+  .mic-zone{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    margin-top:10px;
+  }
+  .mic-btn{
+    position:relative;
+    width:84px; height:84px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    background:linear-gradient(155deg, var(--teal) 0%, var(--teal-dark) 100%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 26px -10px rgba(14,79,81,0.55);
+    transition:transform .15s ease, box-shadow .15s ease, background .25s ease;
+  }
+  .mic-btn:hover{ transform:translateY(-2px); }
+  .mic-btn:active{ transform:translateY(0px) scale(0.97); }
+  .mic-btn svg{ width:28px; height:28px; position:relative; z-index:2; }
+  .mic-btn .ring{
+    position:absolute; inset:-10px;
+    border-radius:50%;
+    border:2px solid var(--coral);
+    opacity:0;
+    transform:scale(0.85);
+  }
+  body[data-state="listening"] .mic-btn{
+    background:linear-gradient(155deg, var(--coral) 0%, var(--coral-dark) 100%);
+    box-shadow:0 10px 26px -10px rgba(225,82,63,0.6);
+  }
+  body[data-state="listening"] .mic-btn .ring{
+    opacity:1;
+    animation:ringpulse 1.6s ease-out infinite;
+  }
+  @keyframes ringpulse{
+    0%{ transform:scale(0.85); opacity:0.65; }
+    100%{ transform:scale(1.35); opacity:0; }
+  }
+  body[data-state="thinking"] .mic-btn{ opacity:0.55; cursor:not-allowed; }
+  body[data-state="speaking"] .mic-btn{ opacity:0.55; cursor:not-allowed; }
+  body[data-state="disconnected"] .mic-btn{ opacity:0.4; cursor:not-allowed; }
+
+  .state-label{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    color:var(--slate);
+    min-height:16px;
+  }
+  body[data-state="listening"] .state-label{ color:var(--coral-dark); }
+  body[data-state="thinking"] .state-label{ color:var(--teal); }
+  body[data-state="speaking"] .state-label{ color:var(--teal-dark); }
+
+  .hero-hint{
+    font-size:12.5px;
+    color:var(--slate-soft);
+    margin-top:14px;
+  }
+  .hero-hint kbd{
+    font-family:var(--font-mono);
+    background:var(--mist);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:1px 6px;
+    font-size:11px;
+  }
+
+  /* ---------- Body grid ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:1.55fr 1fr;
+    gap:18px;
+    margin-top:18px;
+  }
+  @media (max-width:760px){
+    .grid{ grid-template-columns:1fr; }
+  }
+
+  .panel{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+    display:flex;
+    flex-direction:column;
+    min-height:320px;
+  }
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 20px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .panel-title{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--slate);
+  }
+  .panel-count{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--slate-soft);
+  }
+
+  /* ---- Transcript ---- */
+  .transcript{
+    flex:1;
+    overflow-y:auto;
+    padding:18px 20px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    max-height:420px;
+  }
+  .transcript::-webkit-scrollbar{ width:8px; }
+  .transcript::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+
+  .empty-note{
+    margin:auto;
+    text-align:center;
+    color:var(--slate-soft);
+    font-size:13.5px;
+    padding:20px;
+    max-width:260px;
+  }
+
+  .turn{ display:flex; flex-direction:column; gap:4px; max-width:88%; }
+  .turn.user{ align-self:flex-end; align-items:flex-end; }
+  .turn.assistant{ align-self:flex-start; align-items:flex-start; }
+
+  .turn-meta{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--slate-soft);
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .turn-bubble{
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .turn.user .turn-bubble{
+    background:var(--teal-tint);
+    color:var(--teal-dark);
+    border:1px solid rgba(20,107,110,0.14);
+    border-bottom-right-radius:4px;
+  }
+  .turn.assistant .turn-bubble{
+    background:var(--mist);
+    color:var(--ink);
+    border:1px solid var(--line-soft);
+    border-bottom-left-radius:4px;
+  }
+
+  /* ---- Vitals ---- */
+  .vitals{ padding:16px 20px 20px; display:flex; flex-direction:column; gap:12px; }
+  .vital-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:11px 13px;
+    background:var(--mist);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius-sm);
+  }
+  .vital-label{
+    display:flex; align-items:center; gap:9px;
+    font-size:13px; color:var(--ink-soft); font-weight:500;
+  }
+  .vital-value{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--slate);
+    display:flex; align-items:center; gap:6px;
+  }
+  .vital-value.good{ color:var(--success); }
+  .vital-value.warn{ color:var(--amber); }
+
+  .session-box{
+    margin-top:4px;
+    padding:12px 13px;
+    border-radius:var(--radius-sm);
+    border:1px dashed var(--line);
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--slate);
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .session-box b{ color:var(--ink-soft); font-weight:600; }
+
+  /* ---------- Footer ---------- */
+  .footer{
+    margin-top:26px;
+    padding:16px 20px;
+    border-radius:var(--radius-md);
+    background:rgba(20,107,110,0.05);
+    border:1px solid rgba(20,107,110,0.12);
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.55;
+    text-align:center;
+  }
+  .footer strong{ color:var(--teal-dark); }
+
+  /* ---------- Toasts ---------- */
+  .toasts{
+    position:fixed;
+    bottom:20px; left:50%;
+    transform:translateX(-50%);
+    display:flex; flex-direction:column; gap:8px;
+    z-index:50;
+    width:min(92vw, 420px);
+  }
+  .toast{
+    background:var(--ink);
+    color:#fff;
+    padding:11px 15px;
+    border-radius:11px;
+    font-size:13px;
+    box-shadow:0 10px 30px -10px rgba(0,0,0,0.4);
+    display:flex; align-items:center; gap:9px;
+    animation:toastin .25s ease;
+  }
+  .toast.error{ background:var(--error); }
+  @keyframes toastin{ from{ opacity:0; transform:translateY(8px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ---------- Settings popover ---------- */
+  .settings-pop{
+    position:absolute;
+    top:44px; right:24px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    box-shadow:var(--shadow-card);
+    padding:16px;
+    width:280px;
+    z-index:40;
+    display:none;
+  }
+  .settings-pop.open{ display:block; }
+  .settings-pop label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--slate);
+    display:block;
+    margin-bottom:6px;
+  }
+  .settings-pop input{
+    width:100%;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    margin-bottom:10px;
+  }
+  .settings-pop button{
+    width:100%;
+    padding:9px;
+    border-radius:8px;
+    border:none;
+    background:var(--teal);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body data-state="disconnected">
+
+  <div class="wrap">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-6 4 12 2-9 1.5 3H21" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Sehat</span>
+          <span class="brand-eyebrow">AI Care Companion</span>
+        </div>
+      </div>
+
+      <div class="status-cluster" style="position:relative;">
+        <div class="pill" id="connPill">
+          <span class="dot off" id="connDot"></span>
+          <span id="connText">Connecting…</span>
+        </div>
+        <div class="pill" id="sessionPill" style="display:none;">
+          <span>session · </span><span id="sessionIdText">—</span>
+        </div>
+        <button class="icon-btn" id="settingsBtn" aria-label="Connection settings" title="Connection settings">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 13a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V19a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H4a2 2 0 110-4h.09A1.65 1.65 0 005.6 9.6a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009.6 5.6a1.65 1.65 0 001-1.51V4a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H20a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.7"/></svg>
+        </button>
+        <button class="icon-btn" id="restartBtn" aria-label="Start new session" title="Start new session">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 1 2.64 6.36" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M3 21v-6h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <div class="settings-pop" id="settingsPop">
+          <label for="wsUrlInput">WebSocket endpoint</label>
+          <input id="wsUrlInput" type="text" spellcheck="false" placeholder="ws://localhost:8000/ws">
+          <button id="saveWsBtn">Save &amp; reconnect</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="hero">
+      <p class="hero-eyebrow">Real‑time voice session</p>
+      <h1>Tell Sehat what's going on.</h1>
+      <p class="sub">Speak naturally. Sehat listens, responds out loud, and keeps track of the conversation.</p>
+
+      <canvas class="scope" id="scope" width="1120" height="168" aria-hidden="true"></canvas>
+
+      <div class="mic-zone">
+        <button class="mic-btn" id="micBtn" aria-label="Start speaking" aria-pressed="false">
+          <span class="ring" aria-hidden="true"></span>
+          <svg viewBox="0 0 24 24" fill="none" id="micIcon">
+            <path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15z" fill="#fff"/>
+            <path d="M6 11a6 6 0 0 0 12 0M12 17v3.5" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <span class="state-label" id="stateLabel">Connecting to Sehat…</span>
+      </div>
+
+      <p class="hero-hint">Press <kbd>Space</kbd> to start or stop speaking</p>
+    </main>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Conversation</span>
+          <span class="panel-count" id="turnCount">0 turns</span>
+        </div>
+        <div class="transcript" id="transcript">
+          <p class="empty-note">Nothing said yet. Tap the mic and start whenever you're ready — Sehat is listening for context, not judging your grammar.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">System vitals</span>
+        </div>
+        <div class="vitals">
+          <div class="vital-row">
+            <span class="vital-label">Speech recognition</span>
+            <span class="vital-value" id="vitalStt">—</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-label">Response generation</span>
+            <span class="vital-value" id="vitalLlm">—</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-label">Voice synthesis</span>
+            <span class="vital-value" id="vitalTts">—</span>
+          </div>
+          <div class="session-box">
+            <span><b>Session</b> · <span id="vitalsSession">not connected</span></span>
+            <span><b>Turns completed</b> · <span id="vitalsTurns">0</span></span>
+            <span><b>Connection</b> · <span id="vitalsConn">connecting…</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <strong>Sehat offers general guidance only</strong> and is not a substitute for professional medical advice, diagnosis, or treatment. If this is a medical emergency, call your local emergency number immediately.
+    </footer>
+
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ Config ============ */
+  var CONFIG = {
+    WS_URL: localStorage.getItem('sehat_ws_url') || 'ws://localhost:8000/ws'
+  };
+
+  /* ============ DOM refs ============ */
+  var body = document.body;
+  var micBtn = document.getElementById('micBtn');
+  var stateLabel = document.getElementById('stateLabel');
+  var connDot = document.getElementById('connDot');
+  var connText = document.getElementById('connText');
+  var sessionPill = document.getElementById('sessionPill');
+  var sessionIdText = document.getElementById('sessionIdText');
+  var transcriptEl = document.getElementById('transcript');
+  var turnCountEl = document.getElementById('turnCount');
+  var vitalStt = document.getElementById('vitalStt');
+  var vitalLlm = document.getElementById('vitalLlm');
+  var vitalTts = document.getElementById('vitalTts');
+  var vitalsSession = document.getElementById('vitalsSession');
+  var vitalsTurns = document.getElementById('vitalsTurns');
+  var vitalsConn = document.getElementById('vitalsConn');
+  var toastsEl = document.getElementById('toasts');
+  var scope = document.getElementById('scope');
+  var scopeCtx = scope.getContext('2d');
+  var settingsBtn = document.getElementById('settingsBtn');
+  var settingsPop = document.getElementById('settingsPop');
+  var wsUrlInput = document.getElementById('wsUrlInput');
+  var saveWsBtn = document.getElementById('saveWsBtn');
+  var restartBtn = document.getElementById('restartBtn');
+
+  wsUrlInput.value = CONFIG.WS_URL;
+
+  /* ============ App state ============ */
+  var STATE = {
+    ws:null,
+    sessionId:null,
+    appState:'disconnected', // disconnected | idle | listening | thinking | speaking
+    turns:0,
+    reconnectDelay:1000,
+    reconnectTimer:null,
+    manualClose:false,
+
+    audioCtx:null,
+    micStream:null,
+    micSource:null,
+    micAnalyser:null,
+    recorder:null,
+
+    ttsAudioEl:null,
+    ttsSource:null,
+    ttsAnalyser:null,
+
+    turnStartAt:null,
+    sttDoneAt:null,
+    llmDoneAt:null
+  };
+
+  /* ============ Helpers ============ */
+  function fmtMs(ms){
+    if (ms == null) return '—';
+    return Math.round(ms) + 'ms';
+  }
+
+  function nowClock(){
+    var d = new Date();
+    function p(n){ return (n<10?'0':'')+n; }
+    return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  }
+
+  function toast(msg, type){
+    var t = document.createElement('div');
+    t.className = 'toast' + (type==='error' ? ' error' : '');
+    t.textContent = msg;
+    toastsEl.appendChild(t);
+    setTimeout(function(){
+      t.style.opacity = '0';
+      t.style.transition = 'opacity .25s ease';
+      setTimeout(function(){ t.remove(); }, 260);
+    }, 4200);
+  }
+
+  function setAppState(next){
+    STATE.appState = next;
+    body.setAttribute('data-state', next);
+    var labels = {
+      disconnected:'Reconnecting…',
+      idle:'Tap to speak',
+      listening:'Listening…',
+      thinking:'Thinking…',
+      speaking:'Speaking…'
+    };
+    stateLabel.textContent = labels[next] || '';
+    micBtn.setAttribute('aria-pressed', next === 'listening' ? 'true' : 'false');
+    vitalsConn.textContent = next === 'disconnected' ? 'reconnecting…' : 'live · ' + next;
+  }
+
+  function setConnUI(kind){
+    // kind: 'connecting' | 'connected' | 'disconnected'
+    connDot.className = 'dot' + (kind==='connected' ? ' on' : kind==='connecting' ? ' warn pulse' : ' off');
+    connText.textContent = kind==='connected' ? 'Connected' : kind==='connecting' ? 'Connecting…' : 'Disconnected';
+  }
+
+  /* ============ Transcript rendering ============ */
+  function clearEmptyNote(){
+    var note = transcriptEl.querySelector('.empty-note');
+    if (note) note.remove();
+  }
+
+  function addTurn(role, text){
+    clearEmptyNote();
+    var wrap = document.createElement('div');
+    wrap.className = 'turn ' + (role === 'user' ? 'user' : 'assistant');
+
+    var meta = document.createElement('div');
+    meta.className = 'turn-meta';
+    meta.textContent = (role === 'user' ? 'You' : 'Sehat') + ' · ' + nowClock();
+
+    var bubble = document.createElement('div');
+    bubble.className = 'turn-bubble';
+    bubble.textContent = text;
+
+    wrap.appendChild(meta);
+    wrap.appendChild(bubble);
+    transcriptEl.appendChild(wrap);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+
+    if (role === 'assistant'){
+      STATE.turns += 1;
+      turnCountEl.textContent = STATE.turns + (STATE.turns === 1 ? ' turn' : ' turns');
+      vitalsTurns.textContent = STATE.turns;
+    }
+  }
+
+  /* ============ WebSocket ============ */
+  function connect(){
+    setConnUI('connecting');
+    setAppState('disconnected');
+
+    var ws;
+    try{
+      ws = new WebSocket(CONFIG.WS_URL);
+    }catch(e){
+      scheduleReconnect();
+      return;
+    }
+    STATE.ws = ws;
+
+    ws.onopen = function(){
+      setConnUI('connected');
+      STATE.reconnectDelay = 1000;
+    };
+
+    ws.onmessage = function(evt){
+      var data;
+      try{ data = JSON.parse(evt.data); }catch(e){ return; }
+      handleMessage(data);
+    };
+
+    ws.onerror = function(){
+      // onclose will follow; nothing extra needed here
+    };
+
+    ws.onclose = function(){
+      setConnUI('disconnected');
+      setAppState('disconnected');
+      stopRecording(true);
+      if (!STATE.manualClose) scheduleReconnect();
+    };
+  }
+
+  function scheduleReconnect(){
+    clearTimeout(STATE.reconnectTimer);
+    STATE.reconnectTimer = setTimeout(function(){
+      STATE.reconnectDelay = Math.min(STATE.reconnectDelay * 1.6, 10000);
+      connect();
+    }, STATE.reconnectDelay);
+  }
+
+  function send(obj){
+    if (STATE.ws && STATE.ws.readyState === WebSocket.OPEN){
+      STATE.ws.send(JSON.stringify(obj));
+    }
+  }
+
+  function handleMessage(data){
+    switch(data.type){
+      case 'session':
+        STATE.sessionId = data.session_id;
+        sessionPill.style.display = 'flex';
+        sessionIdText.textContent = (data.session_id || '').slice(0,8);
+        vitalsSession.textContent = (data.session_id || '').slice(0,8) || 'not connected';
+        setAppState('idle');
+        break;
+
+      case 'status':
+        // Server-driven states we respect directly; 'idle' right after
+        // TTS is generated is intentionally ignored while audio is still
+        // playing — see playTtsAudio(), which owns the return to idle.
+        if (data.status === 'listening' || data.status === 'thinking'){
+          setAppState(data.status);
+        } else if (data.status === 'idle' && STATE.appState !== 'speaking'){
+          setAppState('idle');
+        }
+        break;
+
+      case 'transcript':
+        STATE.sttDoneAt = performance.now();
+        if (STATE.turnStartAt != null){
+          vitalStt.textContent = fmtMs(STATE.sttDoneAt - STATE.turnStartAt);
+          vitalStt.className = 'vital-value good';
+        }
+        addTurn('user', data.text);
+        break;
+
+      case 'response':
+        STATE.llmDoneAt = performance.now();
+        if (STATE.sttDoneAt != null){
+          vitalLlm.textContent = fmtMs(STATE.llmDoneAt - STATE.sttDoneAt);
+          vitalLlm.className = 'vital-value good';
+        }
+        addTurn('assistant', data.text);
+        break;
+
+      case 'tts':
+        var ttsDoneAt = performance.now();
+        if (STATE.llmDoneAt != null){
+          vitalTts.textContent = fmtMs(ttsDoneAt - STATE.llmDoneAt);
+          vitalTts.className = 'vital-value good';
+        }
+        playTtsAudio(data.audio, data.format || 'webm');
+        break;
+
+      case 'heartbeat':
+        // connection liveness only, no UI action needed
+        break;
+
+      case 'error':
+        toast(data.message || 'Something needs attention.', 'error');
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  /* ============ Audio: microphone capture ============ */
+  function ensureAudioCtx(){
+    if (!STATE.audioCtx){
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      STATE.audioCtx = new Ctx();
+    }
+    if (STATE.audioCtx.state === 'suspended') STATE.audioCtx.resume();
+    return STATE.audioCtx;
+  }
+
+  function bufferToBase64(arrayBuffer){
+    var bytes = new Uint8Array(arrayBuffer);
+    var chunkSize = 0x8000;
+    var binary = '';
+    for (var i = 0; i < bytes.length; i += chunkSize){
+      var slice = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, slice);
+    }
+    return btoa(binary);
+  }
+
+  function startRecording(){
+    if (STATE.appState !== 'idle') return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      toast('This browser cannot access the microphone.', 'error');
+      return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio:true }).then(function(stream){
+      STATE.micStream = stream;
+      var ctx = ensureAudioCtx();
+
+      STATE.micSource = ctx.createMediaStreamSource(stream);
+      STATE.micAnalyser = ctx.createAnalyser();
+      STATE.micAnalyser.fftSize = 1024;
+      STATE.micSource.connect(STATE.micAnalyser);
+
+      var mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = '';
+
+      var recorder = mimeType ? new MediaRecorder(stream, { mimeType:mimeType }) : new MediaRecorder(stream);
+      STATE.recorder = recorder;
+
+      recorder.ondataavailable = function(evt){
+        if (evt.data && evt.data.size > 0){
+          evt.data.arrayBuffer().then(function(buf){
+            send({ type:'audio', data:bufferToBase64(buf) });
+          });
+        }
+      };
+
+      recorder.onstop = function(){
+        send({ type:'stop' });
+        setAppState('thinking');
+        STATE.turnStartAt = performance.now();
+        STATE.sttDoneAt = null;
+        STATE.llmDoneAt = null;
+        vitalStt.textContent = '…'; vitalStt.className = 'vital-value warn';
+        vitalLlm.textContent = '—'; vitalLlm.className = 'vital-value';
+        vitalTts.textContent = '—'; vitalTts.className = 'vital-value';
+      };
+
+      send({ type:'start' });
+      recorder.start(250);
+      setAppState('listening');
+    }).catch(function(err){
+      toast('Microphone blocked — allow access in your browser settings to talk with Sehat.', 'error');
+    });
+  }
+
+  function stopRecording(silent){
+    if (STATE.recorder && STATE.recorder.state !== 'inactive'){
+      STATE.recorder.stop();
+    }
+    if (STATE.micStream){
+      STATE.micStream.getTracks().forEach(function(t){ t.stop(); });
+      STATE.micStream = null;
+    }
+    if (STATE.micSource){ try{ STATE.micSource.disconnect(); }catch(e){} STATE.micSource = null; }
+    STATE.micAnalyser = null;
+    if (silent) setAppState(STATE.sessionId ? 'idle' : 'disconnected');
+  }
+
+  function toggleMic(){
+    if (STATE.appState === 'idle'){ startRecording(); }
+    else if (STATE.appState === 'listening'){ stopRecording(false); }
+  }
+
+  /* ============ Audio: TTS playback ============ */
+  function getTtsAudioEl(){
+    if (!STATE.ttsAudioEl){
+      var el = new Audio();
+      el.crossOrigin = 'anonymous';
+      STATE.ttsAudioEl = el;
+      var ctx = ensureAudioCtx();
+      STATE.ttsSource = ctx.createMediaElementSource(el);
+      STATE.ttsAnalyser = ctx.createAnalyser();
+      STATE.ttsAnalyser.fftSize = 1024;
+      STATE.ttsSource.connect(STATE.ttsAnalyser);
+      STATE.ttsAnalyser.connect(ctx.destination);
+    }
+    return STATE.ttsAudioEl;
+  }
+
+  function playTtsAudio(base64Audio, format){
+    if (!base64Audio) { setAppState('idle'); return; }
+    try{
+      var byteChars = atob(base64Audio);
+      var bytes = new Uint8Array(byteChars.length);
+      for (var i=0;i<byteChars.length;i++) bytes[i] = byteChars.charCodeAt(i);
+      var blob = new Blob([bytes], { type:'audio/' + format });
+      var url = URL.createObjectURL(blob);
+
+      var el = getTtsAudioEl();
+      setAppState('speaking');
+      el.src = url;
+      el.onended = function(){
+        URL.revokeObjectURL(url);
+        setAppState('idle');
+      };
+      el.onerror = function(){
+        URL.revokeObjectURL(url);
+        setAppState('idle');
+      };
+      ensureAudioCtx();
+      el.play().catch(function(){ setAppState('idle'); });
+    }catch(e){
+      setAppState('idle');
+    }
+  }
+
+  /* ============ Scope / vital-line visualizer ============ */
+  var scopeW = 0, scopeH = 0, dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  function resizeScope(){
+    var rect = scope.getBoundingClientRect();
+    scopeW = rect.width; scopeH = rect.height;
+    scope.width = scopeW * dpr;
+    scope.height = scopeH * dpr;
+    scopeCtx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resizeScope);
+
+  var phase = 0;
+  var idleColor = '#146B6E';
+  var listenColor = '#FF6A55';
+  var thinkColor = '#146B6E';
+  var speakColor = '#0E4F51';
+
+  function drawScope(){
+    requestAnimationFrame(drawScope);
+    if (!scopeW) resizeScope();
+    if (!scopeW) return;
+
+    scopeCtx.clearRect(0,0,scopeW,scopeH);
+    var midY = scopeH/2;
+    scopeCtx.lineWidth = 2;
+    scopeCtx.lineJoin = 'round';
+    scopeCtx.lineCap = 'round';
+
+    var st = STATE.appState;
+
+    if (st === 'listening' && STATE.micAnalyser){
+      var buf = new Uint8Array(STATE.micAnalyser.fftSize);
+      STATE.micAnalyser.getByteTimeDomainData(buf);
+      scopeCtx.strokeStyle = listenColor;
+      scopeCtx.beginPath();
+      var step = scopeW / buf.length;
+      for (var i=0;i<buf.length;i++){
+        var v = (buf[i]-128)/128;
+        var y = midY + v * (scopeH*0.42);
+        var x = i*step;
+        if (i===0) scopeCtx.moveTo(x,y); else scopeCtx.lineTo(x,y);
+      }
+      scopeCtx.stroke();
+
+    } else if (st === 'speaking' && STATE.ttsAnalyser){
+      var buf2 = new Uint8Array(STATE.ttsAnalyser.fftSize);
+      STATE.ttsAnalyser.getByteTimeDomainData(buf2);
+      scopeCtx.strokeStyle = speakColor;
+      scopeCtx.beginPath();
+      var step2 = scopeW / buf2.length;
+      for (var j=0;j<buf2.length;j++){
+        var v2 = (buf2[j]-128)/128;
+        var y2 = midY + v2 * (scopeH*0.38);
+        var x2 = j*step2;
+        if (j===0) scopeCtx.moveTo(x2,y2); else scopeCtx.lineTo(x2,y2);
+      }
+      scopeCtx.stroke();
+
+    } else if (st === 'thinking'){
+      scopeCtx.strokeStyle = thinkColor;
+      scopeCtx.globalAlpha = 0.85;
+      scopeCtx.beginPath();
+      var n = 64;
+      for (var k=0;k<=n;k++){
+        var xf = k/n;
+        var x3 = xf*scopeW;
+        var travel = (phase*0.06) % 1;
+        var dist = Math.abs(xf - travel);
+        var bump = Math.exp(-dist*dist*80) * scopeH*0.32;
+        var y3 = midY - bump;
+        if (k===0) scopeCtx.moveTo(x3,y3); else scopeCtx.lineTo(x3,y3);
+      }
+      scopeCtx.stroke();
+      scopeCtx.globalAlpha = 1;
+
+    } else {
+      // idle heartbeat / disconnected flat calm line
+      scopeCtx.strokeStyle = st === 'disconnected' ? '#C7D3D3' : idleColor;
+      scopeCtx.globalAlpha = st === 'disconnected' ? 0.6 : 0.7;
+      scopeCtx.beginPath();
+      var n2 = 140;
+      var beatX = (phase*1.4) % (scopeW+120) - 60;
+      for (var m=0;m<=n2;m++){
+        var xf2 = m/n2;
+        var x4 = xf2*scopeW;
+        var d = x4 - beatX;
+        var spike = 0;
+        if (st !== 'disconnected'){
+          if (d > -6 && d < 2)      spike = -Math.sin((d+6)/8*Math.PI) * scopeH*0.10;
+          else if (d >= 2 && d < 10) spike = Math.sin((d-2)/8*Math.PI) * scopeH*0.30;
+          else if (d >= 10 && d < 16) spike = -Math.sin((d-10)/6*Math.PI) * scopeH*0.14;
+        }
+        var y4 = midY + spike;
+        if (m===0) scopeCtx.moveTo(x4,y4); else scopeCtx.lineTo(x4,y4);
+      }
+      scopeCtx.stroke();
+      scopeCtx.globalAlpha = 1;
+    }
+
+    phase += 1;
+  }
+
+  /* ============ Controls ============ */
+  micBtn.addEventListener('click', toggleMic);
+
+  document.addEventListener('keydown', function(e){
+    if (e.code === 'Space' && e.target === document.body){
+      e.preventDefault();
+      toggleMic();
+    }
+  });
+
+  settingsBtn.addEventListener('click', function(){
+    settingsPop.classList.toggle('open');
+  });
+  document.addEventListener('click', function(e){
+    if (!settingsPop.contains(e.target) && e.target !== settingsBtn){
+      settingsPop.classList.remove('open');
+    }
+  });
+  saveWsBtn.addEventListener('click', function(){
+    var val = wsUrlInput.value.trim();
+    if (!val) return;
+    localStorage.setItem('sehat_ws_url', val);
+    CONFIG.WS_URL = val;
+    settingsPop.classList.remove('open');
+    toast('Endpoint updated. Reconnecting…');
+    STATE.manualClose = true;
+    if (STATE.ws) STATE.ws.close();
+    STATE.manualClose = false;
+    STATE.reconnectDelay = 400;
+    connect();
+  });
+
+  restartBtn.addEventListener('click', function(){
+    location.reload();
+  });
+
+  /* ============ Boot ============ */
+  resizeScope();
+  requestAnimationFrame(drawScope);
+  connect();
+
+})();
+</script>
+</body>
+</html>

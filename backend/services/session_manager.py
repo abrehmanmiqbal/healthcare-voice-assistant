@@ -187,6 +187,43 @@ class SessionManager:
             return session
         return None
     
+    def add_message(self, session_id: str, role: str, content: str, metadata: Optional[Dict] = None) -> bool:
+        """
+        Add a message to a session's conversation history (sync wrapper).
+
+        Args:
+            session_id: Session identifier
+            role: 'user', 'assistant', or 'system'
+            content: Message content
+            metadata: Optional metadata for the message
+
+        Returns:
+            True if message was added, False if session not found
+        """
+        session = self._sessions.get(session_id)
+        if not session or not session.is_active:
+            logger.warning(f"add_message: session not found or inactive: {session_id[:8] if session_id else session_id}")
+            return False
+        session.add_message(role, content, metadata)
+        return True
+
+    def get_recent_messages(self, session_id: str, limit: int = 10) -> List[Dict]:
+        """
+        Get recent conversation messages for a session (sync wrapper).
+
+        Args:
+            session_id: Session identifier
+            limit: Maximum number of messages to return
+
+        Returns:
+            List of recent messages, empty list if session not found
+        """
+        session = self._sessions.get(session_id)
+        if not session:
+            logger.warning(f"get_recent_messages: session not found: {session_id[:8] if session_id else session_id}")
+            return []
+        return session.get_recent_messages(limit)
+
     async def end_session(self, session_id: str) -> bool:
         """
         End and remove a session
