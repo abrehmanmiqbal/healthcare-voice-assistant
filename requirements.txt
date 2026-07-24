@@ -1,0 +1,39 @@
+# ========================================
+# Healthcare Voice AI Assistant
+# Backend Dependencies (Python 3.12 Compatible)
+# ========================================
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.9
+
+# Configuration & Environment
+python-dotenv==1.0.1
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# HTTP Client
+httpx==0.27.0
+aiohttp==3.9.1
+
+# WebSocket
+websockets==12.0
+
+# Audio Processing
+pydub==0.25.1
+numpy==1.26.3
+soundfile==0.12.1
+
+# Async & Concurrency
+anyio==3.7.1
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+email-validator==2.0.0
+aiofiles==23.2.1
+
+# Logging
+structlog==24.1.0
+python-json-logger==2.0.7
