@@ -346,10 +346,9 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=int(os.getenv("PORT", 8000)),
+        reload=False,
         log_level="info",
-        workers=4,
-        loop="asyncio",
-        timeout_graceful_shutdown=30
+        workers=1,
+        timeout_graceful_shutdown=30,
     )
