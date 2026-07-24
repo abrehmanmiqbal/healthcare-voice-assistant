@@ -6,8 +6,7 @@ Centralized, type-safe configuration with environment variable validation
 import os
 from typing import List, Optional, Dict, Any
 from enum import Enum
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings, Field, validator
 from functools import lru_cache
 
 
@@ -37,13 +36,6 @@ class Settings(BaseSettings):
     All settings are loaded from environment variables.
     """
     
-    model_config = ConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
-    )
-    
     # ============ LLM Settings ============
     llm_provider: Provider = Provider.GROQ
     groq_api_key: str = Field(..., min_length=10)
@@ -52,7 +44,7 @@ class Settings(BaseSettings):
     azure_openai_endpoint: Optional[str] = None
     azure_openai_key: Optional[str] = None
     
-    llm_model: str = "llama-3.1-8b-instant"  # Updated to latest model
+    llm_model: str = "llama-3.1-8b-instant"
     llm_temperature: float = Field(0.7, ge=0.0, le=2.0)
     llm_max_tokens: int = Field(150, ge=1, le=4096)
     llm_timeout: int = Field(30, ge=1, le=120)
@@ -93,15 +85,14 @@ class Settings(BaseSettings):
     
     # ============ CORS Settings ============
     allowed_origins: List[str] = Field(
-        default=["http://localhost:3000", "https://*.vercel.app"],
-        description="Allowed origins for CORS"
+        default=["http://localhost:3000", "https://*.vercel.app"]
     )
     allowed_methods: List[str] = ["GET", "POST", "OPTIONS"]
     allowed_headers: List[str] = ["*"]
     
     # ============ System Settings ============
     log_level: LogLevel = LogLevel.INFO
-    environment: str = Field("development", pattern="^(development|staging|production)$")  # ← FIXED
+    environment: str = Field("development")
     debug: bool = Field(False)
     enable_metrics: bool = Field(True)
     enable_tracing: bool = Field(False)
@@ -124,9 +115,14 @@ class Settings(BaseSettings):
 
 Remember: You are not a doctor. Your purpose is to support and guide users toward proper healthcare resources."""
     
-    # ============ Validators ============
-    @field_validator("llm_provider", mode="before")
-    @classmethod
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = False
+        extra = "ignore"
+    
+    # ============ Validators (Pydantic v1 style) ============
+    @validator("llm_provider", pre=True)
     def validate_llm_provider(cls, v):
         """Validate LLM provider has required API keys"""
         if v == Provider.GROQ and not os.getenv("GROQ_API_KEY"):
@@ -137,16 +133,14 @@ Remember: You are not a doctor. Your purpose is to support and guide users towar
             raise ValueError("OPENAI_API_KEY is required when using OpenAI provider")
         return v
     
-    @field_validator("stt_provider", mode="before")
-    @classmethod
+    @validator("stt_provider", pre=True)
     def validate_stt_provider(cls, v):
         """Validate STT provider has required API keys"""
         if v == Provider.DEEPGRAM and not os.getenv("DEEPGRAM_API_KEY"):
             raise ValueError("DEEPGRAM_API_KEY is required when using Deepgram provider")
         return v
     
-    @field_validator("tts_provider", mode="before")
-    @classmethod
+    @validator("tts_provider", pre=True)
     def validate_tts_provider(cls, v):
         """Validate TTS provider has required API keys"""
         if v == Provider.ELEVENLABS and not os.getenv("ELEVENLABS_API_KEY"):
