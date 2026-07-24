@@ -6,7 +6,8 @@ Centralized, type-safe configuration with environment variable validation
 import os
 from typing import List, Optional, Dict, Any
 from enum import Enum
-from pydantic import BaseSettings, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 
@@ -35,6 +36,13 @@ class Settings(BaseSettings):
     Application settings with validation and type safety.
     All settings are loaded from environment variables.
     """
+    
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
+    )
     
     # ============ LLM Settings ============
     llm_provider: Provider = Provider.GROQ
@@ -85,14 +93,15 @@ class Settings(BaseSettings):
     
     # ============ CORS Settings ============
     allowed_origins: List[str] = Field(
-        default=["http://localhost:3000", "https://*.vercel.app"]
+        default=["http://localhost:3000", "https://*.vercel.app"],
+        description="Allowed origins for CORS"
     )
     allowed_methods: List[str] = ["GET", "POST", "OPTIONS"]
     allowed_headers: List[str] = ["*"]
     
     # ============ System Settings ============
     log_level: LogLevel = LogLevel.INFO
-    environment: str = Field("development")
+    environment: str = Field("development", pattern="^(development|staging|production)$")
     debug: bool = Field(False)
     enable_metrics: bool = Field(True)
     enable_tracing: bool = Field(False)
@@ -115,14 +124,9 @@ class Settings(BaseSettings):
 
 Remember: You are not a doctor. Your purpose is to support and guide users toward proper healthcare resources."""
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        extra = "ignore"
-    
-    # ============ Validators (Pydantic v1 style) ============
-    @validator("llm_provider", pre=True)
+    # ============ Validators ============
+    @field_validator("llm_provider", mode="before")
+    @classmethod
     def validate_llm_provider(cls, v):
         """Validate LLM provider has required API keys"""
         if v == Provider.GROQ and not os.getenv("GROQ_API_KEY"):
@@ -133,14 +137,16 @@ Remember: You are not a doctor. Your purpose is to support and guide users towar
             raise ValueError("OPENAI_API_KEY is required when using OpenAI provider")
         return v
     
-    @validator("stt_provider", pre=True)
+    @field_validator("stt_provider", mode="before")
+    @classmethod
     def validate_stt_provider(cls, v):
         """Validate STT provider has required API keys"""
         if v == Provider.DEEPGRAM and not os.getenv("DEEPGRAM_API_KEY"):
             raise ValueError("DEEPGRAM_API_KEY is required when using Deepgram provider")
         return v
     
-    @validator("tts_provider", pre=True)
+    @field_validator("tts_provider", mode="before")
+    @classmethod
     def validate_tts_provider(cls, v):
         """Validate TTS provider has required API keys"""
         if v == Provider.ELEVENLABS and not os.getenv("ELEVENLABS_API_KEY"):
