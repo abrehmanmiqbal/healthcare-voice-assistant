@@ -1,6 +1,7 @@
 # ========================================
 # Healthcare Voice AI Assistant
 # Backend Dependencies (Python 3.12 Compatible)
+# Using Pre-built Wheels to avoid Rust compilation
 # ========================================
 
 # Web Framework
@@ -10,7 +11,8 @@ python-multipart==0.0.6
 
 # Configuration & Environment
 python-dotenv==1.0.0
-pydantic==2.4.2
+pydantic==2.0.3
+pydantic-core==2.0.2
 pydantic-settings==2.1.0
 
 # HTTP Client
